@@ -10,7 +10,25 @@ def sample_alpha(alpha, n_items):
 def sample_beta(beta, K):
     return torch.randn(K) 
 
-def learn_gaussian_policy(gaussian_policy, recommender_model, optimizer, users, n_items, alpha, beta, n_episodes, Q, wR, K, M, T, Nt):
+def learn_gaussian_policy(
+                        gaussian_policy, 
+                        recommender_model, 
+                        optimizer, 
+                        users, 
+                        n_items, 
+                        alpha, 
+                        beta, 
+                        n_episodes, 
+                        Q, 
+                        wR,
+                        wS,
+                        X,
+                        Y, 
+                        K, 
+                        M, 
+                        T, 
+                        Nt):
+
     for episode in range(n_episodes):
         gp_loss = 0.
         for t in range(T):
