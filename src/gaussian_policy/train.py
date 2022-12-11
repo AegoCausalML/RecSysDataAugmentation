@@ -1,5 +1,7 @@
 import torch 
 
+from counterfactual.counterfactual import C
+
 def sample_user(users):
     n_users = users.size()[0]
     return users[torch.randperm(n_users)[0]] 
@@ -16,8 +18,8 @@ def learn_gaussian_policy(
                         optimizer, 
                         users, 
                         n_items, 
-                        alpha, 
-                        beta, 
+                        Alpha, 
+                        Beta, 
                         n_episodes, 
                         Q, 
                         wR,
@@ -29,23 +31,27 @@ def learn_gaussian_policy(
                         T, 
                         Nt):
 
-    for episode in range(n_episodes):
-        gp_loss = 0.
+    gp_loss = 0.
+    for episode in range(1, n_episodes + 1):
+        episode_loss = 0.
         for t in range(T):
             u = sample_user(users)
             tau = gaussian_policy(u) + Nt
-            alpha = sample_alpha(None, n_items)
-            beta = sample_beta(None, K)
+
+            alpha = sample_alpha(Alpha, n_items)
+            beta = sample_beta(Beta, K)
             
-            u, r, s = generated_sample = C(u, tau, alpha, beta, Q, wR, K, M)
+            u, r, s = C(u, tau, alpha, beta, Q, wR, X, Y, wS, K, M)
 
-            rec_loss = recommender_model.test_loss(generated_sample)
-            # gp_loss -= rec_loss
-            gp_loss += torch.sum(tau) 
-            break
+            rec_loss = recommender_model.get_user_loss(u, r, s)
 
-        gp_loss.backward()    
+            episode_loss -= rec_loss
+        
+        gp_loss -= episode_loss
+
+        episode_loss.backward() 
         optimizer.step()
         optimizer.zero_grad()
         
-        break
+        print('episode {0:d} , total_loss: {1:.4f}, episode_loss: {2:.4f}'.format(
+                            episode, gp_loss / episode, episode_loss))
