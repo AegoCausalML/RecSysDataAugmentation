@@ -9,7 +9,7 @@ Todo os códigos e notebooks utilizados estão nas pastas `src` e `notebooks`.
 
 ## How to run
 
-Este projeto foi feito com o **Lightning-Hydra-Template**, para rodar:
+Este projeto foi feito utilizando Jupyter Notebooks e o Google Colab e depois adaptado para rodar com o **Lightning-Hydra-Template**, para rodar:
 
 Install dependencies
 
