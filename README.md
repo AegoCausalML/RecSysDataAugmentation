@@ -9,44 +9,5 @@ Todo os códigos e notebooks utilizados estão nas pastas `src` e `notebooks`.
 
 ## How to run
 
-Este projeto foi feito com o **Lightning-Hydra-Template**, para rodar:
-
-Install dependencies
-
-```bash
-# clone project
-git clone https://github.com/YourGithubName/RecSysDataAugmentation
-cd RecSysDataAugmentation
-
-# [OPTIONAL] create conda environment
-conda create -n myenv python=3.9
-conda activate myenv
-
-# install pytorch according to instructions
-# https://pytorch.org/get-started/
-
-# install requirements
-pip install -r requirements.txt
-```
-
-Train model with default configuration
-
-```bash
-# train on CPU
-python src/train.py trainer=cpu
-
-# train on GPU
-python src/train.py trainer=gpu
-```
-
-Train model with chosen experiment configuration from [configs/experiment/](configs/experiment/)
-
-```bash
-python src/train.py experiment=experiment_name.yaml
-```
-
-You can override any parameter from command line like this
-
-```bash
-python src/train.py trainer.max_epochs=20 datamodule.batch_size=64
-```
+Notebooks ...
+Dar mais instrucoes.
