@@ -2,10 +2,12 @@
 
 import os
 import random
+from typing import Dict
 
 import torch
 import pandas as pd
 from tqdm import tqdm
+
 # from torch.utils.data import DataLoader
 
 # from models.gaussian_policy import GaussianPolicy
@@ -18,9 +20,12 @@ from tqdm import tqdm
 
 from models.pr.pr import P_R_Network as PR
 from models.ps.ps import P_S_Network as PS
+from models.gaussian_policy.gaussian_policy import GaussianPolicy
 from models.gaussian_policy.train import train as train_policy
 from models.cpr.cpr import gen_r_from_tau, gen_s
 
+from utils.download_mind import download_mind
+from utils.preprocess_mind import preprocess_mind
 from utils.constants import SEED
 
 torch.manual_seed(SEED)
@@ -50,9 +55,14 @@ def load_pr_and_ps(n_users: int, n_items: int,  dR: int, dS: int, M: int,
     return pr, ps 
 
 def generate_counterfactual_impressions(ps: PS,
+                                        policy: GaussianPolicy,
                                         Q: torch.tensor,
                                         wR: torch.tensor,
-                                        base_behavior: pd.DataFrame, 
+                                        base_behavior: pd.DataFrame,
+                                        user_d: Dict[str, int],
+                                        item_idx_to_code: Dict[int, str],
+                                        user_idx_to_code: Dict[int, str], 
+                                        n_items: int,
                                         n_users: int = 10000,
                                         batch_size: int = 16):
     data = list()
@@ -105,16 +115,35 @@ if __name__ == '__main__':
     mind_path = 'mind/'
     data_path = 'data/'
 
+    print()
+    print('-' * 15 + ' BAIXANDO MIND ' + '-' * 15)
+    print()
+    
+    download_mind(mind_path)
+
+    print()
+    print('-' * 15 + ' PRÉ-PROCESSANDO MIND ' + '-' * 15)
+    print()
+    preprocess_mind(mind_path, data_path)
+
     user_d, item_d, user_idx_to_code, item_idx_to_code = read_data('data/')
     n_users, n_items = len(user_d), len(item_d)
-    
+
+    print()
+    print('-' * 15 + ' TREINANDO PR ' + '-' * 15)
+    print()
+
+    print()
+    print('-' * 15 + ' TREINANDO PS ' + '-' * 15)
+    print()
+
     pr, ps = load_pr_and_ps(n_users, n_items, dR, dS, M_train)
 
     print()
     print('-' * 15 + ' TREINANDO POLÍTICA GAUSSIANA ' + '-' * 15)
     print()
 
-    policy = train_policy(pr, ps, n_users, n_items, item_idx_to_code, user_idx_to_code, K, M, dR)
+    policy = train_policy(pr, ps, n_users, n_items, item_idx_to_code, user_idx_to_code, K, M, dR, n_episodes=1)
 
     print()
     print('-' * 15 + ' GERANDO DADOS CONTRAFACTUAIS ' + '-' * 15)
@@ -128,8 +157,10 @@ if __name__ == '__main__':
     Q = pr.item_emb.weight.data
     wR = pr.w.data.squeeze()
 
-    # Salva os dados contrafactuais gerados para serem usados na avaliação
-    counterfactual_behaviors = generate_counterfactual_impressions(ps, Q, wR, base_behavior, n_users=10)
+    # # Salva os dados contrafactuais gerados para serem usados na avaliação
+    counterfactual_behaviors = generate_counterfactual_impressions(ps, policy, Q, wR, base_behavior, user_d, 
+                                                                    item_idx_to_code, user_idx_to_code, n_items, n_users=10)
+
     counterfactual_behaviors.to_csv(os.path.join(mind_path, 'counterfactual', 'behaviors.tsv'), sep='\t', index=False, header=False)
 
     with open(os.path.join(mind_path, 'train', 'behaviors.tsv')) as f:

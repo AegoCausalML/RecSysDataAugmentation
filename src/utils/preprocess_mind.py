@@ -25,7 +25,7 @@ def gen_code_dict(code_l):
         i += 1
     return code_d
 
-def preprocess_mind(data_path = 'mind', out_path = 'mind_processed'):
+def preprocess_mind(data_path = 'mind', out_path = 'data'):
     if not os.path.exists(out_path):
         os.makedirs(out_path)
 

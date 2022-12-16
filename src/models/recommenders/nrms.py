@@ -7,10 +7,10 @@ from tqdm import tqdm
 import tensorflow as tf
 tf.get_logger().setLevel('ERROR') # only show error messages
 
-from recommenders.models.deeprec.deeprec_utils import download_deeprec_resources 
 from recommenders.models.newsrec.newsrec_utils import prepare_hparams
 from recommenders.models.newsrec.models.nrms import NRMSModel
 from recommenders.models.newsrec.io.mind_iterator import MINDIterator
+from recommenders.models.deeprec.deeprec_utils import download_deeprec_resources 
 from recommenders.models.newsrec.newsrec_utils import get_mind_data_set
 
 from utils.constants import SEED
@@ -36,13 +36,13 @@ class NRMS:
         self.yaml_file = os.path.join(data_path, "utils", r'nrms.yaml')
 
         mind_url, mind_train_dataset, mind_dev_dataset, mind_utils = get_mind_data_set(mind_type)
-
         if not os.path.exists(self.train_news_file):
             download_deeprec_resources(mind_url, os.path.join(data_path, 'train'), mind_train_dataset)
             
         if not os.path.exists(self.valid_news_file):
             download_deeprec_resources(mind_url, \
                                     os.path.join(data_path, 'valid'), mind_dev_dataset)
+
         if not os.path.exists(self.yaml_file):
             download_deeprec_resources(r'https://recodatasets.z20.web.core.windows.net/newsrec/', \
                                     os.path.join(data_path, 'utils'), mind_utils)

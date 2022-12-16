@@ -143,7 +143,7 @@ def train(
     print('-' * 15 + ' TREINANDO RECOMENDADOR PARA POLÍTICA GAUSSIANA ' + '-' * 15)
     print()
 
-    recommender = Recommender()
+    recommender = Recommender('saved_models/nrms/nrms_ckpt')
 
     policy = GaussianPolicy(n_users, dR, hidden_dimension)
     optimizer = torch.optim.Adam(policy.parameters(), lr=learning_rate)
