@@ -15,7 +15,7 @@ Install dependencies
 
 ```bash
 # clone project
-git clone https://github.com/YourGithubName/RecSysDataAugmentation
+git clone https://github.com/AegoCausalML/RecSysDataAugmentation.git
 cd RecSysDataAugmentation
 # [OPTIONAL] create conda environment
 conda create -n myenv python=3.9
