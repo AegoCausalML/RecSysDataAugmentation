@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from models.pr.mind_pr_dataset import MIND_P_R_Dataset, mind_p_r_collate_fn
+from models.pr.pr import P_R_Network, loss
 
 from utils.constants import SEED
 from utils.mind_dataset import MIND_Dataset
@@ -40,15 +41,32 @@ def pr_train_loop(dataloader, model, loss_fn, optimizer, device):
             print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
     return agg_loss / size
 
-def train(train_df: pd.DataFrame, 
+def train(
+        pr_model: P_R_Network,
+        train_df: pd.DataFrame, 
         user_d: Dict[str, int],
         item_d: Dict[str, int],
         max_sampling: int,
-        batch_size: int = 32):
+        batch_size: int = 32,
+        n_epochs: int = 100):
+
+    pr_save_path = 'pr_model.pth'
     
     train_ds = MIND_Dataset(train_df, user_d, item_d)
 
     pr_train_ds = MIND_P_R_Dataset(train_ds, max_sampling)
     pr_train_dl = DataLoader(pr_train_ds, batch_size=batch_size, 
                             shuffle=True, collate_fn=mind_p_r_collate_fn)
+
+    
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    pr_model = pr_model.to(device)
  
+    pr_optimizer = torch.optim.Adam(pr_model.parameters(), lr=1e-3)
+
+    for epoch_n in range(n_epochs):
+        train_loss = pr_train_loop(pr_train_dl, pr_model, loss, pr_optimizer, device)
+        if epoch_n % 3 == 0:
+            torch.save(pr_model.state_dict(), pr_save_path)
+
+    torch.save(pr_model.state_dict(), pr_save_path)

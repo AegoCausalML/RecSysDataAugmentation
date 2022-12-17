@@ -19,6 +19,7 @@ from tqdm import tqdm
 # from utils.preprocess_mind import preprocess_mind
 
 from models.pr.pr import P_R_Network as PR
+from models.pr.train import train as pr_train
 from models.ps.ps import P_S_Network as PS
 from models.gaussian_policy.gaussian_policy import GaussianPolicy
 from models.gaussian_policy.train import train as train_policy
@@ -127,10 +128,13 @@ if __name__ == '__main__':
     preprocess_mind(mind_path, data_path)
 
     user_d, item_d, user_idx_to_code, item_idx_to_code = read_data('data/')
-    n_users, n_items = len(user_d), len(item_d)
+    n_users, n_items = len(user_d)+1, len(item_d)+1
 
     print()
     print('-' * 15 + ' TREINANDO PR ' + '-' * 15)
+    train_df = pd.read_csv('data/train_df.csv')
+    pr = PR(n_users, n_items, emb_dim=dR)
+    pr_train(pr, train_df, user_d, item_d, 5, 32, 100)
     print()
 
     print()
