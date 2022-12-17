@@ -47,6 +47,7 @@ def train(
         user_d: Dict[str, int],
         item_d: Dict[str, int],
         max_sampling: int,
+        learning_rate: float = 1e-3,
         batch_size: int = 32,
         n_epochs: int = 100):
 
@@ -62,7 +63,7 @@ def train(
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     pr_model = pr_model.to(device)
  
-    pr_optimizer = torch.optim.Adam(pr_model.parameters(), lr=1e-3)
+    pr_optimizer = torch.optim.Adam(pr_model.parameters(), lr=learning_rate)
 
     for epoch_n in range(n_epochs):
         train_loss = pr_train_loop(pr_train_dl, pr_model, loss, pr_optimizer, device)

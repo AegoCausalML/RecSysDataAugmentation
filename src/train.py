@@ -111,24 +111,52 @@ def generate_counterfactual_impressions(ps: PS,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    # Hiperparametros da política gaussiana
-    parser.add_argument('-ds', action='store', dest='ds', default=2, required=False,
-                        help='Ps: Dimensão do embedding.')
-    parser.add_argument('-dr', action='store', dest='dr', default=2, required=False,
-                        help='Pr: Dimensão do embedding.')
-    parser.add_argument('-m_train', action='store', dest='m_train', default=299, required=False)
-    parser.add_argument('-m', action='store', dest='m', default=2, required=False,
-                        help='Política Gaussiana: Quantidade de selecionados da lista de recomendação.')
-    parser.add_argument('-k', action='store', dest='k', default=5, required=False,
-                        help='Política Gaussiana: Tamanho da lista de recomendação.')
+    # Pârametros gerais
+    parser.add_argument('-k', action='store', dest='k', default=5, type=int, required=False,
+                        help='GERAL: Tamanho da lista de recomendação de treino.')
+    parser.add_argument('-mind_path', action='store', dest='mind_path', default='mind/', required=False,
+                    help='GERAL: Pasta onde o dataset mind está ou será baixado.')
+    parser.add_argument('-data_path', action='store', dest='data_path', default='data/', required=False,
+                    help='GERAL: Pasta onde dados processados serão armazenados.')
+    
+    # Parâmetros de PR
+    parser.add_argument('-pr_epochs', action='store', dest='pr_epochs', default=100, type=int, required=False,
+                        help='PR: Número de épocas de treinamento.')
+    parser.add_argument('-pr_lr', action='store', dest='pr_lr', default=1e-3, type=float, required=False,
+                        help='PR: Taxa de treinamento.')
+    parser.add_argument('-pr_batch_size', action='store', dest='pr_batch_size', default=32, type=int, required=False,
+                        help='PR: Tamanho dos batches de treinameno.')
+    parser.add_argument('-pr_max_sampling', action='store', dest='pr_max_sampling', default=5, type=int, required=False,
+                        help='PR: Tamanho máximo de sampling.')
+    parser.add_argument('-dr', action='store', dest='dr', default=2, type=int, required=False,
+                        help='PR: Dimensão do embedding.')
+    
+    # Parâmetros de PS
+    parser.add_argument('-ps_epochs', action='store', dest='ps_epochs', default=5, type=int, required=False,
+                        help='PS: Número de épocas de treinamento de PS.')
+    parser.add_argument('-ps_lr', action='store', dest='ps_lr', default=1e-3, type=float, required=False,
+                        help='PS: Taxa de treinamento.')
+    parser.add_argument('-ps_batch_size', action='store', dest='ps_batch_size', default=32, type=int, required=False,
+                        help='PR: Tamanho dos batches de treinameno.')
+    parser.add_argument('-ds', action='store', dest='ds', default=2, type=int, required=False,
+                        help='PS: Dimensão do embedding.')
+    parser.add_argument('-m_train', action='store', dest='m_train', default=299, type=int, required=False,
+                        help='PS: Quantidade de selecionados da lista de recomendação de treino.')
+    
+    # Parâmetros da política gaussiana
+    parser.add_argument('-m', action='store', dest='m', default=2, type=int, required=False,
+                        help='Política Gaussiana: Quantidade de selecionados da lista de recomendação de treino.')
+
+    parser.add_argument('-gp_hidden_dimension', action='store', dest='gp_hidden_dimension', default=16, type=int, required=False,
+                        help='Política Gaussiana: Dimensão da camada oculta.')
+    parser.add_argument('-gp_lr', action='store', dest='gp_lr', default=1e-3, type=float, required=False,
+                        help='Política Gaussiana: Taxa de treinamento.')
+    parser.add_argument('-gp_batch_size', action='store', dest='gp_batch_size', default=32, type=int, required=False,
+                        help='Política Gaussiana: Tamanho dos batches de treinameno.')
+    parser.add_argument('-gp_episodes', action='store', dest='gp_episodes', default=100, type=int, required=False,
+                        help='Política Gaussiana: Número de episódios de treinamento.')
 
     arguments = parser.parse_args()
-
-    #dR = 2
-    #dS = 2 
-    #M_train = 299
-    #M = 2
-    #K = 5
     
     dR = arguments.dr
     dS = arguments.ds
@@ -136,8 +164,8 @@ if __name__ == '__main__':
     M = arguments.m
     K = arguments.k
     
-    mind_path = 'mind/'
-    data_path = 'data/'
+    mind_path = arguments.mind_path
+    data_path = arguments.data_path
 
     print()
     print('-' * 15 + ' BAIXANDO MIND ' + '-' * 15)
@@ -157,23 +185,25 @@ if __name__ == '__main__':
     print('-' * 15 + ' TREINANDO PR ' + '-' * 15)
     train_df = pd.read_csv('data/train_df.csv')
     pr = PR(n_users+1, n_items+1, emb_dim=dR)
-    pr_train(pr, train_df, user_d, item_d, 5, 32, 100)
+    pr_train(pr,train_df, user_d, item_d,
+            arguments.pr_max_sampling, arguments.pr_lr, 
+            arguments.pr_batch_size, arguments.pr_epochs)
     print()
 
     print()
     print('-' * 15 + ' TREINANDO PS ' + '-' * 15)
-    ps = PS(n_users+1, n_items + 1, M, emb_dim=dS)
-    ps_train(ps, train_df, user_d, item_d, 32, 100)
-    ps_train
+    ps = PS(n_users+1, n_items + 1, M_train, emb_dim=dS)
+    ps_train(ps, train_df, user_d, item_d, 
+            arguments.ps_lr, arguments.ps_batch_size, arguments.ps_epochs)
     print()
-
-    # pr, ps = load_pr_and_ps(n_users, n_items, dR, dS, M_train)
 
     print()
     print('-' * 15 + ' TREINANDO POLÍTICA GAUSSIANA ' + '-' * 15)
     print()
 
-    policy = train_policy(pr, ps, n_users, n_items, item_idx_to_code, user_idx_to_code, K, M, dR, n_episodes=1)
+    policy = train_policy(mind_path, pr, ps, n_users, n_items, item_idx_to_code, 
+                        user_idx_to_code, K, M, dR, arguments.gp_lr, 
+                        arguments.gp_hidden_dimension, arguments.gp_batch_size, arguments.gp_episodes)
 
     print()
     print('-' * 15 + ' GERANDO DADOS CONTRAFACTUAIS ' + '-' * 15)

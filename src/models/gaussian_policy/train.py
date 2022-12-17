@@ -103,6 +103,7 @@ def reinforce_batch(policy: GaussianPolicy,
     return loss.item()
 
 def train(
+        mind_path: str,
         pr: PR,
         ps: PS,
         n_users: int,
@@ -143,7 +144,7 @@ def train(
     print('-' * 15 + ' TREINANDO RECOMENDADOR PARA POLÍTICA GAUSSIANA ' + '-' * 15)
     print()
 
-    recommender = Recommender('saved_models/nrms/nrms_ckpt')
+    recommender = Recommender(mind_path=mind_path)
 
     policy = GaussianPolicy(n_users, dR, hidden_dimension)
     optimizer = torch.optim.Adam(policy.parameters(), lr=learning_rate)

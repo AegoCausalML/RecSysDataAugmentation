@@ -41,6 +41,7 @@ def train(
         train_df: pd.DataFrame, 
         user_d: Dict[str, int],
         item_d: Dict[str, int],
+        learning_rate: float = 1e-3,
         batch_size: int = 32,
         n_epochs: int = 100):
 
@@ -52,10 +53,10 @@ def train(
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     ps_model = ps_model.to(device)
  
-    ps_optimizer = torch.optim.Adam(ps_model.parameters(), lr=1e-3)
+    ps_optimizer = torch.optim.Adam(ps_model.parameters(), lr=learning_rate)
 
     for epoch_n in range(n_epochs):
-        train_loss = ps_train_loop(ps_train_dl, ps_model, loss, ps_optimizer, device)
+        ps_train_loop(ps_train_dl, ps_model, loss, ps_optimizer, device)
         if epoch_n % 3 == 0:
             torch.save(ps_model.state_dict(), ps_save_path)
 
