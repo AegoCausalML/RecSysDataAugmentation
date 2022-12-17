@@ -1,10 +1,18 @@
 import torch
+from torch.utils.data import DataLoader
+
+import pandas as pd
+
+from typing import Dict
 
 from utils.constants import SEED
+from models.ps.ps import P_S_Network, loss
+
+from utils.mind_dataset import MIND_Dataset, mind_collate_fn
 
 torch.manual_seed(SEED)
 
-def train_loop(dataloader, model, loss_fn, optimizer, device):
+def ps_train_loop(dataloader, model, loss_fn, optimizer, device):
     agg_loss = 0.0
     size = len(dataloader.dataset)
     for batch, (u, r, r_mask, s) in enumerate(dataloader):
@@ -28,3 +36,27 @@ def train_loop(dataloader, model, loss_fn, optimizer, device):
 
     return agg_loss / size
     
+def train(
+        ps_model: P_S_Network,
+        train_df: pd.DataFrame, 
+        user_d: Dict[str, int],
+        item_d: Dict[str, int],
+        batch_size: int = 32,
+        n_epochs: int = 100):
+
+    ps_save_path = 'ps_model.pth'
+    
+    ps_train_ds = MIND_Dataset(train_df, user_d, item_d)
+    ps_train_dl = DataLoader(ps_train_ds, batch_size=batch_size, shuffle=True, collate_fn=mind_collate_fn)
+    
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    ps_model = ps_model.to(device)
+ 
+    ps_optimizer = torch.optim.Adam(ps_model.parameters(), lr=1e-3)
+
+    for epoch_n in range(n_epochs):
+        train_loss = ps_train_loop(ps_train_dl, ps_model, loss, ps_optimizer, device)
+        if epoch_n % 3 == 0:
+            torch.save(ps_model.state_dict(), ps_save_path)
+
+    torch.save(ps_model.state_dict(), ps_save_path)
