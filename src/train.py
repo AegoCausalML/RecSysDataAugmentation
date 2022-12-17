@@ -8,6 +8,8 @@ import torch
 import pandas as pd
 from tqdm import tqdm
 
+import argparse
+
 # from torch.utils.data import DataLoader
 
 # from models.gaussian_policy import GaussianPolicy
@@ -107,12 +109,32 @@ def generate_counterfactual_impressions(ps: PS,
     return pd.DataFrame(data, columns=['ImpressionID', 'UserID', 'Time', 'History', 'Impressions'])  
 
 if __name__ == '__main__':
-    # Treinamento da política gaussiana
-    dR = 2
-    dS = 2 
-    M_train = 299
-    M = 2
-    K = 5
+    parser = argparse.ArgumentParser()
+
+    # Hiperparametros da política gaussiana
+    parser.add_argument('-ds', action='store', dest='ds', default=2, required=False,
+                        help='Ps: Dimensão do embedding.')
+    parser.add_argument('-dr', action='store', dest='dr', default=2, required=False,
+                        help='Pr: Dimensão do embedding.')
+    parser.add_argument('-m_train', action='store', dest='m_train', default=299, required=False)
+    parser.add_argument('-m', action='store', dest='m', default=2, required=False,
+                        help='Política Gaussiana: Quantidade de selecionados da lista de recomendação.')
+    parser.add_argument('-k', action='store', dest='k', default=5, required=False,
+                        help='Política Gaussiana: Tamanho da lista de recomendação.')
+
+    arguments = parser.parse_args()
+
+    #dR = 2
+    #dS = 2 
+    #M_train = 299
+    #M = 2
+    #K = 5
+    
+    dR = arguments.dr
+    dS = arguments.ds
+    M_train = arguments.m_train
+    M = arguments.m
+    K = arguments.k
     
     mind_path = 'mind/'
     data_path = 'data/'
