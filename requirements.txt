@@ -6,7 +6,7 @@ torchmetrics==0.9.3
 
 
 #-------mind----------------#
-pandas==1.5.2
+pandas==1.5.3
 recommenders==1.1.1
 
 #----tensorflow--------#
